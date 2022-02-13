@@ -1,3 +1,5 @@
+pub mod cartridge;
+
 #[cfg(test)]
 mod tests {
     #[test]
