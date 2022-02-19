@@ -6,7 +6,7 @@ pub struct Register {
     r13_r14: [u32; 12],
     r15: u32,
 
-    cpsr: CPSR,
+    pub(super) cpsr: CPSR,
     spsr: [CPSR; 6],
 }
 
@@ -126,12 +126,28 @@ enum CPUMode {
     System     = 0b11111,
 }
 
+pub enum CpsrFlag {
+    N,
+    Z,
+    C,
+    V,
+}
+
 #[derive(Clone, Copy)]
 pub struct CPSR(u32);
 
 impl CPSR {
     pub fn new(x: u32) -> Self {
         CPSR(x)
+    }
+
+    pub fn is_valid_flag(&self, flag: CpsrFlag) -> bool {
+        match flag {
+            CpsrFlag::N => ((self.0 >> 31) & 1) == 1,
+            CpsrFlag::Z => ((self.0 >> 30) & 1) == 1,
+            CpsrFlag::C => ((self.0 >> 29) & 1) == 1,
+            CpsrFlag::V => ((self.0 >> 28) & 1) == 1,
+        }
     }
 
     fn get_mode(&self) -> CPUMode {
@@ -150,9 +166,6 @@ impl CPSR {
 
 #[cfg(test)]
 mod tests {
-    use core::panic;
-    use std::io::Read;
-
     use super::*;
 
     #[test]
@@ -290,6 +303,39 @@ mod tests {
             register.set_mode(*cpu_mode);
             assert_eq!(register.read(15), 10);
         }
+    }
+
+    #[test]
+    fn is_valid_flag() {
+        let cpsr = CPSR::new(0);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), false);
+
+        let cpsr = CPSR::new(0b1000_0000_0000_0000_0000_0000_0000_0000);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), false);
+
+        let cpsr = CPSR::new(0b0100_0000_0000_0000_0000_0000_0000_0000);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), false);
+
+        let cpsr = CPSR::new(0b0010_0000_0000_0000_0000_0000_0000_0000);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), false);
+
+        let cpsr = CPSR::new(0b0001_0000_0000_0000_0000_0000_0000_0000);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), true);
     }
 
     #[test]
