@@ -6,7 +6,7 @@ pub struct Register {
     r13_r14: [u32; 12],
     r15: u32,
 
-    cspr: CPSR,
+    cpsr: CPSR,
     spsr: [CPSR; 6],
 }
 
@@ -18,7 +18,7 @@ impl Register {
             r13_r14: [0; 12],
             r15: 0,
 
-            cspr: CPSR::new(0),
+            cpsr: CPSR::new(0),
             spsr: [CPSR::new(0); 6],
         }
     }
@@ -81,7 +81,7 @@ impl Register {
     }
 
     fn get_bank_index_r8_r12(&self) -> usize {
-        match self.cspr.get_mode() {
+        match self.cpsr.get_mode() {
             CPUMode::FIQ => 1,
             _ => 0,
         }
@@ -89,7 +89,7 @@ impl Register {
 
     #[rustfmt::skip]
     fn get_bank_index_r13_14(&self) -> usize {
-        match self.cspr.get_mode() {
+        match self.cpsr.get_mode() {
             CPUMode::System | CPUMode::User => 0,
             CPUMode::FIQ                    => 1,
             CPUMode::Supervisor             => 2,
@@ -103,13 +103,13 @@ impl Register {
     #[rustfmt::skip]
     fn set_mode(&mut self, mode: CPUMode) {
         match mode {
-            CPUMode::User       => self.cspr.write((self.cspr.read() & 0b00000) | 0b10000),
-            CPUMode::FIQ        => self.cspr.write((self.cspr.read() & 0b00000) | 0b10001),
-            CPUMode::IRQ        => self.cspr.write((self.cspr.read() & 0b00000) | 0b10010),
-            CPUMode::Supervisor => self.cspr.write((self.cspr.read() & 0b00000) | 0b10011),
-            CPUMode::Abort      => self.cspr.write((self.cspr.read() & 0b00000) | 0b10111),
-            CPUMode::Undefined  => self.cspr.write((self.cspr.read() & 0b00000) | 0b11011),
-            CPUMode::System     => self.cspr.write((self.cspr.read() & 0b00000) | 0b11111),
+            CPUMode::User       => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b10000),
+            CPUMode::FIQ        => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b10001),
+            CPUMode::IRQ        => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b10010),
+            CPUMode::Supervisor => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b10011),
+            CPUMode::Abort      => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b10111),
+            CPUMode::Undefined  => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b11011),
+            CPUMode::System     => self.cpsr.write((self.cpsr.read() & 0b00000) | 0b11111),
         }
     }
 }
