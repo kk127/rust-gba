@@ -61,6 +61,22 @@ impl Cpu {
             panic!("Arm instruction decode error: Can't decode {:08x}", inst);
         }
     }
+
+    fn arm_b(&mut self, inst: u32) {
+        let offset = ((inst as i32) << 8) >> 6;
+        let pc = (self.register.read(15) as i32).wrapping_add(offset) as u32;
+        self.register.write(15, pc);
+        // TODO pipeline
+    }
+
+    fn arm_bl(&mut self, inst: u32) {
+        let offset = ((inst as i32) << 8) >> 6;
+        let pc = (self.register.read(15) as i32).wrapping_add(offset) as u32;
+        self.register
+            .write(14, self.register.read(15).wrapping_add(4));
+        self.register.write(15, pc);
+        // TODO pipeline
+    }
 }
 
 #[cfg(test)]

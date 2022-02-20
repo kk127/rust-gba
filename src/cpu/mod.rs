@@ -1,3 +1,5 @@
+pub mod arm;
+
 use num_derive::FromPrimitive;
 
 use crate::register::CpsrFlag;
@@ -25,7 +27,7 @@ enum Cond {
 }
 
 pub struct Cpu {
-    register: Register,
+    pub(crate) register: Register,
 }
 
 impl Cpu {
