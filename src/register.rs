@@ -1,5 +1,7 @@
 use num_derive::FromPrimitive;
 
+use crate::cpu::CpuState;
+
 pub struct Register {
     r0_r7: [u32; 8],
     r8_r12: [u32; 10],
@@ -18,7 +20,7 @@ impl Register {
             r13_r14: [0; 12],
             r15: 0,
 
-            cpsr: CPSR::new(0),
+            cpsr: CPSR::new(0x0000_00D3),
             spsr: [CPSR::new(0); 6],
         }
     }
@@ -141,12 +143,27 @@ impl CPSR {
         CPSR(x)
     }
 
-    pub fn is_valid_flag(&self, flag: CpsrFlag) -> bool {
+    pub(crate) fn is_valid_flag(&self, flag: CpsrFlag) -> bool {
         match flag {
             CpsrFlag::N => ((self.0 >> 31) & 1) == 1,
             CpsrFlag::Z => ((self.0 >> 30) & 1) == 1,
             CpsrFlag::C => ((self.0 >> 29) & 1) == 1,
             CpsrFlag::V => ((self.0 >> 28) & 1) == 1,
+        }
+    }
+
+    pub(crate) fn set_cpu_state(&mut self, state: CpuState) {
+        match state {
+            CpuState::THUMB => self.0 |= 0x0000_0020,
+            CpuState::ARM => self.0 &= 0xffff_ffdf,
+        }
+    }
+
+    pub(crate) fn get_cpu_state(&self) -> CpuState {
+        if (self.0 >> 5) & 1 == 1 {
+            CpuState::THUMB
+        } else {
+            CpuState::ARM
         }
     }
 
@@ -362,5 +379,18 @@ mod tests {
         for (cpsr, answer) in cpsrs.into_iter().zip(answers.into_iter()) {
             assert_eq!(cpsr.get_mode(), answer)
         }
+    }
+
+    #[test]
+    fn cpu_state() {
+        let mut register = Register::new();
+        // initial cpu state of cpsr is ARM.
+        assert_eq!(register.cpsr.get_cpu_state(), CpuState::ARM);
+
+        register.cpsr.set_cpu_state(CpuState::THUMB);
+        assert_eq!(register.cpsr.get_cpu_state(), CpuState::THUMB);
+
+        register.cpsr.set_cpu_state(CpuState::ARM);
+        assert_eq!(register.cpsr.get_cpu_state(), CpuState::ARM);
     }
 }
