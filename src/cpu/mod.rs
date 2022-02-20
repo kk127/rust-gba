@@ -26,6 +26,12 @@ enum Cond {
     NV   = 0xf,
 }
 
+#[derive(PartialEq, Eq, Debug)]
+pub(crate) enum CpuState {
+    THUMB,
+    ARM,
+}
+
 pub struct Cpu {
     pub(crate) register: Register,
 }

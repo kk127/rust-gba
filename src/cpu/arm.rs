@@ -1,4 +1,4 @@
-use crate::cpu::Cpu;
+use crate::cpu::{Cpu, CpuState};
 
 #[derive(PartialEq, Eq, Debug)]
 enum ArmInstruction {
@@ -76,6 +76,21 @@ impl Cpu {
             .write(14, self.register.read(15).wrapping_add(4));
         self.register.write(15, pc);
         // TODO pipeline
+    }
+
+    fn arm_bx(&mut self, inst: u32) {
+        let register_index = (inst & 0b1111) as usize;
+        let register_value = self.register.read(register_index);
+
+        if register_value & 1 == 1 {
+            self.register.cpsr.set_cpu_state(CpuState::THUMB);
+            self.register.write(15, register_value);
+            // TODO pipeline
+        } else {
+            self.register.cpsr.set_cpu_state(CpuState::ARM);
+            self.register.write(15, register_value);
+            // TODO pipeline
+        }
     }
 }
 
