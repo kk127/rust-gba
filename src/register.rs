@@ -128,11 +128,12 @@ enum CPUMode {
     System     = 0b11111,
 }
 
+#[derive(PartialEq, Eq, Debug)]
 pub enum CpsrFlag {
-    N,
-    Z,
-    C,
-    V,
+    N = 31,
+    Z = 30,
+    C = 29,
+    V = 28,
 }
 
 #[derive(Clone, Copy)]
@@ -149,6 +150,15 @@ impl CPSR {
             CpsrFlag::Z => ((self.0 >> 30) & 1) == 1,
             CpsrFlag::C => ((self.0 >> 29) & 1) == 1,
             CpsrFlag::V => ((self.0 >> 28) & 1) == 1,
+        }
+    }
+
+    pub(crate) fn set_nzcv_flag(&mut self, cpsr: CpsrFlag, is_set: bool) {
+        let shift_num = cpsr as u8;
+        let shifted_bit = 1 << shift_num;
+        match is_set {
+            true => self.0 |= shifted_bit,
+            false => self.0 &= !shifted_bit,
         }
     }
 
@@ -379,6 +389,31 @@ mod tests {
         for (cpsr, answer) in cpsrs.into_iter().zip(answers.into_iter()) {
             assert_eq!(cpsr.get_mode(), answer)
         }
+    }
+
+    #[test]
+    fn set_nzcv_flag() {
+        let mut cpsr = CPSR::new(0);
+
+        cpsr.set_nzcv_flag(CpsrFlag::N, true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), true);
+        cpsr.set_nzcv_flag(CpsrFlag::N, false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::N), false);
+
+        cpsr.set_nzcv_flag(CpsrFlag::Z, true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), true);
+        cpsr.set_nzcv_flag(CpsrFlag::Z, false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::Z), false);
+
+        cpsr.set_nzcv_flag(CpsrFlag::C, true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), true);
+        cpsr.set_nzcv_flag(CpsrFlag::C, false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::C), false);
+
+        cpsr.set_nzcv_flag(CpsrFlag::V, true);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), true);
+        cpsr.set_nzcv_flag(CpsrFlag::V, false);
+        assert_eq!(cpsr.is_valid_flag(CpsrFlag::V), false);
     }
 
     #[test]
