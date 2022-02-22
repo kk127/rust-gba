@@ -47,9 +47,9 @@ impl Cpu {
     fn cond(&self, inst: u32) -> bool {
         let nzcv = inst >> 28;
         let cond = num::FromPrimitive::from_u32(nzcv).unwrap();
+        let flag_n = self.register.cpsr.is_valid_flag(CpsrFlag::N);
         let flag_z = self.register.cpsr.is_valid_flag(CpsrFlag::Z);
         let flag_c = self.register.cpsr.is_valid_flag(CpsrFlag::C);
-        let flag_n = self.register.cpsr.is_valid_flag(CpsrFlag::N);
         let flag_v = self.register.cpsr.is_valid_flag(CpsrFlag::V);
 
         match cond {
@@ -69,6 +69,63 @@ impl Cpu {
             Cond::LE   =>  flag_z || (flag_n != flag_v),
             Cond::AL   => true,
             Cond::NV   => false,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cond() {
+        // Initial state of all nzcv flag is false.
+        // flag_n = false
+        // flag_z = false
+        // flag_c = false
+        // flag_v = false
+        let cpu = Cpu::new();
+
+        let insts = vec![
+            0x0000_0000, // EQ
+            0x1000_0000, // NE
+            0x2000_0000, // CSHS
+            0x3000_0000, // CCLO
+            0x4000_0000, // MI
+            0x5000_0000, // PL
+            0x6000_0000, // VS
+            0x7000_0000, // VC
+            0x8000_0000, // HI
+            0x9000_0000, // LS
+            0xa000_0000, // GE
+            0xb000_0000, // LT
+            0xc000_0000, // GT
+            0xd000_0000, // LE
+            0xe000_0000, // AL
+            0xf000_0000, // NV
+        ];
+
+        let answers = vec![
+            false, //  flag_z
+            true,  // !flag_z
+            false, //  flag_c
+            true,  // !flag_c
+            false, //  flag_n
+            true,  // !flag_n
+            false, //  flag_v
+            true,  // !flag_v
+            false, //  flag_c && !flag_z,
+            true,  // !flag_c ||  flag_z,
+            true,  //  flag_n ==  flag_v,
+            false, //  flag_n !=  flag_v,
+            true,  // !flag_z && (flag_n == flag_v),
+            false, //  flag_z || (flag_n != flag_v),
+            true,  // true,
+            false, // false,
+        ];
+
+        for (&inst, &ans) in insts.iter().zip(answers.iter()) {
+            assert_eq!(cpu.cond(inst), ans);
         }
     }
 }
