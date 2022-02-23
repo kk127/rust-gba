@@ -30,7 +30,7 @@ fn main() {
     println!("{:>4}, {:08b}", b << 2, b << 2);
 }
 ```
-出力結果
+Output
 ```
  -64, 11000000
   -4, 11111100
@@ -43,4 +43,20 @@ fn main() {
    0, 00000000
  128, 10000000
    0, 00000000
+```
+To apply logical right shift to signed integer,
+implement as follows.
+```Rust
+fn main() {
+    let a: i8 = -64;
+    println!("{:>4}, {:08b}", a, a);
+    println!("{:>4}, {:08b}", (a as u8) >> 4, (a as u8) >> 4);
+    println!("{:>4}, {:08b}", a >> 4, a >> 4);
+}
+```
+Output
+```
+ -64, 11000000
+  12, 00001100
+  -4, 11111100
 ```
