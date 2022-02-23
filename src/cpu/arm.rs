@@ -94,6 +94,20 @@ impl Cpu {
         }
     }
 
+    fn arm_mpy(&mut self, inst: u32) {
+        let opcode = (inst >> 21) & 0b1111;
+        match opcode {
+            0b0000 => self.arm_mul(inst),
+            0b0001 => self.arm_mla(inst),
+            0b0010 => panic!("UMAAL is not supported."),
+            0b0100 => self.arm_umull(inst),
+            0b0101 => self.arm_umlal(inst),
+            0b0110 => self.arm_smull(inst),
+            0b0111 => self.arm_smlal(inst),
+            _ => panic!("Invalid MPY opcode: {:8x}, inst: {:8x}", opcode, inst),
+        }
+    }
+
     fn arm_mul(&mut self, inst: u32) {
         let rd_index = ((inst >> 16) & 0b1111) as usize;
         let rs_index = ((inst >> 8) & 0b1111) as usize;
