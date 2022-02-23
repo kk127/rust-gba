@@ -1,4 +1,5 @@
 use crate::cpu::{Cpu, CpuState};
+use crate::register::CpsrFlag;
 
 #[derive(PartialEq, Eq, Debug)]
 enum ArmInstruction {
@@ -91,6 +92,50 @@ impl Cpu {
             self.register.write(15, register_value);
             // TODO pipeline
         }
+    }
+
+    fn arm_mul(&mut self, inst: u32) {
+        let rd_index = ((inst >> 16) & 0b1111) as usize;
+        let rs_index = ((inst >> 8) & 0b1111) as usize;
+        let rm_index = (inst & 0b1111) as usize;
+
+        let rs = self.register.read(rs_index);
+        let rm = self.register.read(rm_index);
+        let result = rm * rs;
+
+        self.register.write(rd_index, result);
+
+        if (inst >> 20) & 1 == 1 {
+            let flag_n = (result >> 31) & 1 == 1;
+            let flag_z = result == 0;
+
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::N, flag_n);
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::Z, flag_z);
+        }
+        // TODO cycle
+    }
+
+    fn arm_mla(&mut self, inst: u32) {
+        let rd_index = ((inst >> 16) & 0b1111) as usize;
+        let rn_index = ((inst >> 12) & 0b1111) as usize;
+        let rs_index = ((inst >> 8) & 0b1111) as usize;
+        let rm_index = (inst & 0b1111) as usize;
+
+        let rn = self.register.read(rn_index);
+        let rs = self.register.read(rs_index);
+        let rm = self.register.read(rm_index);
+        let result = rm * rs + rn;
+
+        self.register.write(rd_index, result);
+
+        if (inst >> 20) & 1 == 1 {
+            let flag_n = (result >> 31) & 1 == 1;
+            let flag_z = result == 0;
+
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::N, flag_n);
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::Z, flag_z);
+        }
+        // TODO cycle
     }
 }
 
