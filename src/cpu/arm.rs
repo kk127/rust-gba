@@ -137,6 +137,112 @@ impl Cpu {
         }
         // TODO cycle
     }
+
+    fn arm_umull(&mut self, inst: u32) {
+        let rdhi_index = ((inst >> 16) & 0b1111) as usize;
+        let rdlo_index = ((inst >> 12) & 0b1111) as usize;
+        let rs_index = ((inst >> 8) & 0b1111) as usize;
+        let rm_index = (inst & 0b1111) as usize;
+
+        let rs = self.register.read(rs_index) as u64;
+        let rm = self.register.read(rm_index) as u64;
+        let result = rm * rs;
+
+        let rdhi = (result >> 32) as u32;
+        let rdlo = result as u32;
+        self.register.write(rdhi_index, rdhi);
+        self.register.write(rdlo_index, rdlo);
+
+        if (inst >> 20) & 1 == 1 {
+            let flag_n = (result >> 63) & 1 == 1;
+            let flag_z = result == 0;
+
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::N, flag_n);
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::Z, flag_z);
+        }
+
+        // TODO cycle
+    }
+
+    fn arm_umlal(&mut self, inst: u32) {
+        let rdhi_index = ((inst >> 16) & 0b1111) as usize;
+        let rdlo_index = ((inst >> 12) & 0b1111) as usize;
+        let rs_index = ((inst >> 8) & 0b1111) as usize;
+        let rm_index = (inst & 0b1111) as usize;
+
+        let rdhi = self.register.read(rdhi_index) as u64;
+        let rdlo = self.register.read(rdlo_index) as u64;
+        let rs = self.register.read(rs_index) as u64;
+        let rm = self.register.read(rm_index) as u64;
+        let result = rm * rs + (rdhi << 32 | rdlo);
+
+        let rdhi = (result >> 32) as u32;
+        let rdlo = result as u32;
+        self.register.write(rdhi_index, rdhi);
+        self.register.write(rdlo_index, rdlo);
+
+        if (inst >> 20) & 1 == 1 {
+            let flag_n = (result >> 63) & 1 == 1;
+            let flag_z = result == 0;
+
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::N, flag_n);
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::Z, flag_z);
+        }
+        // TODO cycle
+    }
+
+    fn arm_smull(&mut self, inst: u32) {
+        let rdhi_index = ((inst >> 16) & 0b1111) as usize;
+        let rdlo_index = ((inst >> 12) & 0b1111) as usize;
+        let rs_index = ((inst >> 8) & 0b1111) as usize;
+        let rm_index = (inst & 0b1111) as usize;
+
+        let rs = (self.register.read(rs_index) as i32) as i64;
+        let rm = (self.register.read(rm_index) as i32) as i64;
+        let result = (rm * rs) as u64;
+
+        let rdhi = (result >> 32) as u32;
+        let rdlo = result as u32;
+        self.register.write(rdhi_index, rdhi);
+        self.register.write(rdlo_index, rdlo);
+
+        if (inst >> 20) & 1 == 1 {
+            let flag_n = (result >> 63) & 1 == 1;
+            let flag_z = result == 0;
+
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::N, flag_n);
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::Z, flag_z);
+        }
+
+        // TODO cycle
+    }
+
+    fn arm_smlal(&mut self, inst: u32) {
+        let rdhi_index = ((inst >> 16) & 0b1111) as usize;
+        let rdlo_index = ((inst >> 12) & 0b1111) as usize;
+        let rs_index = ((inst >> 8) & 0b1111) as usize;
+        let rm_index = (inst & 0b1111) as usize;
+
+        let rdhi = (self.register.read(rdhi_index) as i32) as i64;
+        let rdlo = (self.register.read(rdlo_index) as i32) as i64;
+        let rs = (self.register.read(rs_index) as i32) as i64;
+        let rm = (self.register.read(rm_index) as i32) as i64;
+        let result = (rm * rs + (rdhi << 32 | rdlo)) as u64;
+
+        let rdhi = (result >> 32) as u32;
+        let rdlo = result as u32;
+        self.register.write(rdhi_index, rdhi);
+        self.register.write(rdlo_index, rdlo);
+
+        if (inst >> 20) & 1 == 1 {
+            let flag_n = (result >> 63) & 1 == 1;
+            let flag_z = result == 0;
+
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::N, flag_n);
+            self.register.cpsr.set_nzcv_flag(CpsrFlag::Z, flag_z);
+        }
+        // TODO cycle
+    }
 }
 
 #[cfg(test)]
